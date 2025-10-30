@@ -1,8 +1,5 @@
 from textual.app import ComposeResult
-from textual.widgets import (
-    Static,
-    Label,
-)
+from textual.widgets import Static, Label
 
 
 class StatPanel(Static):
@@ -21,14 +18,16 @@ class StatPanel(Static):
     }
     """
 
-    def __init__(self, var_name: str, stats: dict, **kwargs):
+    def __init__(self, var_name: str, stats: dict, title: str | None = None, **kwargs):
         super().__init__(**kwargs)
         self.var_name = var_name
         self.stats = stats
+        self.panel_title = title or f"📈 {var_name}"
+
+    def on_mount(self) -> None:
+        self.border_title = self.panel_title
 
     def compose(self) -> ComposeResult:
-        yield Label(f"[b]📈 {self.var_name}[/b]")
-
         if "error" in self.stats:
             yield Label(f"❌ Error: {self.stats['error']}", classes="error")
             return

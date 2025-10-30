@@ -1,7 +1,7 @@
 import numpy as np
 import pandas as pd
 from textual.app import App, ComposeResult
-from textual.containers import VerticalScroll
+from textual.containers import VerticalScroll, Grid
 from textual.widgets import (
     TabbedContent,
     TabPane,
@@ -44,12 +44,16 @@ class MyApp(App):
     .error {
         color: $error;
     }
+    #stats_grid {
+        grid-size: 3;
+        grid-gutter: 1;
+        height: auto;
+    }
     """
 
-    # Optional: Define key hints for the footer
     BINDINGS = [
         Binding("q", "quit", "Quit"),
-        Binding("escape", "unfocus", "Unfocus", show=False),  # <-- Add this
+        Binding("escape", "unfocus", "Unfocus", show=False),
     ]
 
     def __init__(self, csv_path: str = "Student_Performance.csv"):
@@ -71,8 +75,8 @@ class MyApp(App):
         random_row = self.df.sample(n=1).iloc[0]
 
         # Model 1: Full
-        X_full = self.df[self.all_features].values
-        y = np.array(self.df[self.target].values)
+        X_full = self.df[self.all_features].to_numpy()
+        y = self.df[self.target].to_numpy()
         coeffs1, r1, r2_1 = multiple_linear_regression_scalar(y, X_full)
         self.model1_coeffs = coeffs1
         self.model1_r = r1
@@ -82,7 +86,7 @@ class MyApp(App):
 
         # Model 2: 3 features
         feats2 = ["Hours Studied", "Previous Scores", "Sleep Hours"]
-        X2 = self.df[feats2].values
+        X2 = self.df[feats2].to_numpy()
         coeffs2, r2, r2_2 = multiple_linear_regression_scalar(y, X2)
         self.model2_coeffs = coeffs2
         self.model2_r = r2
@@ -97,7 +101,7 @@ class MyApp(App):
             "Sample Question Papers Practiced",
             "Sleep Hours",
         ]
-        X3 = self.df[feats3].values
+        X3 = self.df[feats3].to_numpy()
         coeffs3, r3, r2_3 = multiple_linear_regression_scalar(y, X3)
         self.model3_coeffs = coeffs3
         self.model3_r = r3
@@ -115,9 +119,10 @@ class MyApp(App):
         yield Header()
         with TabbedContent():
             with TabPane("📊 Dataset Analysis"):
-                with VerticalScroll(id="analysis-container"):
-                    for var_name, stats in self.analysis_results.items():
-                        yield StatPanel(var_name, stats)
+                with VerticalScroll():
+                    with Grid(id="stats_grid"):
+                        for var_name, stats in self.analysis_results.items():
+                            yield StatPanel(var_name=var_name, stats=stats)
 
             with TabPane("📈 Regression 1 (Full)"):
                 yield RegressionTab(
